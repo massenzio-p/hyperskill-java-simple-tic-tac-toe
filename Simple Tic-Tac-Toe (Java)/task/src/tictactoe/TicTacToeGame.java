@@ -4,13 +4,12 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.StringTokenizer;
-import java.util.stream.Collectors;
 
 public class TicTacToeGame implements Game {
 
     private static final int BATTLEFIELD_SIZE = 3;
 
-    private char[] battleFieldMatrix;
+    private final char[] battleFieldMatrix;
     private final PrintWriter writer;
     private final Scanner reader;
     private final GameAnalyzer gameAnalyzer;
@@ -19,30 +18,34 @@ public class TicTacToeGame implements Game {
         this.writer = writer;
         this.reader = reader;
         this.gameAnalyzer = gameAnalyzer;
+        this.battleFieldMatrix = new char[BATTLEFIELD_SIZE * BATTLEFIELD_SIZE];
+        Arrays.fill(this.battleFieldMatrix, ' ');
     }
 
     @Override
     public void play() {
-        String line = reader.nextLine();
-        this.battleFieldMatrix = line.toCharArray();
-
         printTheField();
-        acceptPlayerMove(reader, writer);
-        printTheField();
+        GameState state = null;
+        char nextPlayer = 'X';
+        while (state != GameState.X_WINS && state != GameState.O_WINS && state != GameState.DRAW) {
+            acceptPlayerMove(reader, writer, nextPlayer);
+            printTheField();
+            state = this.gameAnalyzer.analyzeGameState(this.battleFieldMatrix);
+            nextPlayer = nextPlayer == 'X' ? 'O' : 'X';
+        }
+        String stateMsg = mapStateToMessage(state);
+        writer.println(stateMsg);
+        writer.flush();
 
-//        GameState state = this.gameAnalyzer.analyzeGameState(this.battleFieldMatrix);
-//        String stateMsg = mapStateToMessage(state);
-//        writer.println(stateMsg);
-//        writer.flush();
     }
 
-    private void acceptPlayerMove(Scanner reader, PrintWriter writer) {
+    private void acceptPlayerMove(Scanner reader, PrintWriter writer, char nextPlayer) {
         StringTokenizer tokenizer;
         int[] move;
         while (true) {
             try {
                 tokenizer = new StringTokenizer(reader.nextLine(), " ");
-                move = new int[] {
+                move = new int[]{
                         Integer.parseInt(tokenizer.nextToken()),
                         Integer.parseInt(tokenizer.nextToken())
                 };
@@ -64,12 +67,12 @@ public class TicTacToeGame implements Game {
                 continue;
             }
             int actualIndex = (move[0] - 1) * BATTLEFIELD_SIZE + move[1] - 1;
-            if (this.battleFieldMatrix[actualIndex] != '_') {
+            if (this.battleFieldMatrix[actualIndex] != ' ') {
                 writer.println("This cell is occupied! Choose another one!");
                 writer.flush();
                 continue;
             } else {
-                this.battleFieldMatrix[actualIndex] = 'X';
+                this.battleFieldMatrix[actualIndex] = nextPlayer;
             }
             return;
         }
@@ -91,11 +94,9 @@ public class TicTacToeGame implements Game {
             if (x == 0) {
                 writer.print("| ");
             }
-            if (this.battleFieldMatrix[i] == '_') {
-                writer.print(" ");
-            } else {
-                writer.print(this.battleFieldMatrix[i]);
-            }
+
+            writer.print(this.battleFieldMatrix[i]);
+
             writer.print(' ');
             if (x++ == BATTLEFIELD_SIZE - 1) {
                 writer.println("|");

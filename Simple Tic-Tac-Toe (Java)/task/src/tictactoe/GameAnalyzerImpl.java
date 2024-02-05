@@ -52,7 +52,7 @@ public class GameAnalyzerImpl implements GameAnalyzer {
         }
         // rows
         for (int row = 0; row < battleSize; row++) {
-            for (int i = row; i < row + battleSize; i++) {
+            for (int i = row * battleSize; i < row * battleSize + 3; i++) {
                 if (gameSnapshot[i] == option) {
                     winner = true;
                 } else {
